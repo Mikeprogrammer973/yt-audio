@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Audio Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(25, 25, 40, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(90deg, #ff0040, #ff0080);
+            background-size: 200% 200%;
+            animation: gradient 5s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .url-input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #ff0040;
+            box-shadow: 0 0 0 3px rgba(255, 0, 64, 0.2);
+        }
+
+        .url-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn {
+            padding: 18px 30px;
+            background: linear-gradient(90deg, #ff0040, #ff0080);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 0, 64, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(90deg, #0066ff, #0080ff);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(0, 102, 255, 0.3);
+        }
+
+        .player-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .player-container {
+            background: rgba(15, 15, 35, 0.8);
+            border-radius: 18px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .album-art {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #ff0040, #ff0080);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            position: relative;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .track-details h3 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+            max-width: 500px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .track-details p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        .player-controls {
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            margin-bottom: 20px;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .progress-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff0040;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 64, 0.8);
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(90deg, #ff0040, #ff0080);
+            font-size: 22px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ff0040;
+            cursor: pointer;
+        }
+
+        .download-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .download-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .download-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #0066ff;
+            transform: translateY(-2px);
+        }
+
+        .download-btn .format-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .download-btn .format-badge {
+            background: #0066ff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .download-btn .size {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .download-progress {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 102, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 102, 255, 0.3);
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066ff, #0080ff);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .error-message {
+            background: rgba(255, 0, 64, 0.1);
+            border: 1px solid rgba(255, 0, 64, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #ff0040;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .track-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .album-art {
+                width: 120px;
+                height: 120px;
+                font-size: 36px;
+            }
+            
+            .track-details h3 {
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-music"></i> YouTube Audio Player</h1>
+            <p>Converta e baixe qualquer áudio do YouTube</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="url-input-section">
+                <h2><i class="fas fa-link"></i> Insira o link do YouTube</h2>
+                <div class="input-group">
+                    <input type="text" id="urlInput" class="url-input" placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/...">
+                    <button id="loadBtn" class="btn">
+                        <i class="fas fa-play-circle"></i> Carregar Áudio
+                    </button>
+                </div>
+                
+                <div id="errorMessage" class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorText">URL inválida. Por favor, insira um link válido do YouTube.</span>
+                </div>
+                
+                <div id="loader" class="loader">
+                    <div class="spinner"></div>
+                    <p>Carregando informações do vídeo...</p>
+                </div>
+            </div>
+            
+            <div id="playerSection" class="player-section">
+                <h2><i class="fas fa-headphones-alt"></i> Player de Áudio</h2>
+                
+                <div class="player-container">
+                    <div class="track-info">
+                        <div class="album-art">
+                            <i class="fab fa-youtube"></i>
+                            <img id="thumbnail" src="" alt="Thumbnail">
+                        </div>
+                        <div class="track-details">
+                            <h3 id="trackTitle">Carregando título...</h3>
+                            <p id="trackInfo">Duração: <span id="videoDuration">--:--</span> • Canal: <span id="videoChannel">Carregando...</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="player-controls">
+                        <div class="progress-bar">
+                            <div class="time-info">
+                                <span id="currentTime">0:00</span>
+                                <span id="duration">0:00</span>
+                            </div>
+                            <input type="range" id="progressSlider" class="progress-slider" min="0" max="100" value="0">
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button id="prevBtn" class="control-btn" title="Voltar 10 segundos">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            
+                            <button id="playPauseBtn" class="control-btn play-btn" title="Play/Pause">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            
+                            <button id="nextBtn" class="control-btn" title="Avançar 10 segundos">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            
+                            <button id="downloadBtn" class="control-btn btn-secondary" title="Opções de Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="volume-control">
+                            <i class="fas fa-volume-up"></i>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="80">
+                            <span id="volumePercent">80%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="download-section">
+                        <h3><i class="fas fa-download"></i> Opções de Download</h3>
+                        
+                        <div class="download-progress" id="downloadProgress">
+                            <div class="progress-text">
+                                <span id="downloadStatus">Preparando download...</span>
+                                <span id="downloadPercentage">0%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-fill" id="downloadProgressFill"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="download-options" id="downloadOptions">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>YouTube Audio Player &copy; 2023 - Use apenas para conteúdo de domínio público ou autorizado</p>
+        </div>
+    </div>
+
+    <div id="yt-player" style="display: none;"></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <script>
+        let player;
+        let isPlaying = false;
+        let currentVideoId = '';
+        let currentVideoData = null;
+        let updateInterval;
+        let audioStreamUrl = '';
+        
+        // init yt API 
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('yt-player', {
+                videoId: '',
+                playerVars: {
+                    controls: 0,
+                    modestbranding: 1,
+                    rel: 0,
+                    enablejsapi: 1
+                },
+                events: {
+                    onReady: onPlayerReady,
+                    onStateChange: onPlayerStateChange
+                }
+            });
+        }
+        
+        function onPlayerReady() {
+            console.log('Player do YouTube está pronto');
+        }
+        
+        // monitorar estado do player
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                updatePlayPauseButton();
+                startProgressUpdate();
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+                stopProgressUpdate();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+                stopProgressUpdate();
+            }
+        }
+        
+        // Extrair ID do vídeo do URL do YouTube
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+        
+        // Carregar vídeo do YouTube
+        async function loadYouTubeVideo() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            
+            // Verificar se o campo está vazio
+            if (!url) {
+                showError('Por favor, insira um URL do YouTube');
+                return;
+            }
+            
+            // Extrair o ID do vídeo
+            const videoId = extractVideoId(url);
+            
+            if (!videoId) {
+                showError('URL do YouTube inválido. Por favor, verifique o link.');
+                return;
+            }
+            
+            // Mostrar loader
+            showLoader(true);
+            
+            // Limpar player anterior
+            if (currentVideoId) {
+                player.stopVideo();
+                isPlaying = false;
+                updatePlayPauseButton();
+            }
+            
+            // Carregar o vídeo no player do YouTube
+            player.loadVideoById(videoId);
+            currentVideoId = videoId;
+            
+            // Buscar informações do vídeo
+            try {
+                await fetchVideoInfo(videoId);
+            } catch (error) {
+                console.error('Erro ao buscar informações do vídeo:', error);
+                // Usar informações básicas como fallback
+                updatePlayerInfoFallback(videoId);
+            }
+            
+            // Gerar URL de stream de áudio - simulação
+            audioStreamUrl = `https://youtube-audio-server.com/stream/${videoId}`;
+            
+            // Mostrar a seção do player
+            setTimeout(() => {
+                showPlayerSection(true);
+                showLoader(false);
+                generateDownloadOptions();
+            }, 1500);
+        }
+        
+        // Buscar informações do vídeo - demo
+        async function fetchVideoInfo(videoId) {
+            const mockData = {
+                title: `Vídeo do YouTube (ID: ${videoId.substring(0, 8)}...)`,
+                duration: '3:45',
+                channel: 'YouTube',
+                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+            };
+            
+            // Simular delay de rede
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            currentVideoData = mockData;
+            
+            // Atualizar UI com informações do vídeo
+            document.getElementById('trackTitle').textContent = mockData.title;
+            document.getElementById('videoDuration').textContent = mockData.duration;
+            document.getElementById('videoChannel').textContent = mockData.channel;
+            
+            // Tentar carregar thumbnail
+            const thumbnailImg = document.getElementById('thumbnail');
+            thumbnailImg.src = mockData.thumbnail;
+            thumbnailImg.onload = () => {
+                thumbnailImg.style.display = 'block';
+                document.querySelector('.album-art i').style.display = 'none';
+            };
+            thumbnailImg.onerror = () => {
+                thumbnailImg.style.display = 'none';
+                document.querySelector('.album-art i').style.display = 'block';
+            };
+        }
+        
+        // Fallback para informações do vídeo
+        function updatePlayerInfoFallback(videoId) {
+            currentVideoData = {
+                title: `Vídeo do YouTube - ${videoId}`,
+                duration: '--:--',
+                channel: 'YouTube'
+            };
+            
+            document.getElementById('trackTitle').textContent = currentVideoData.title;
+            document.getElementById('videoDuration').textContent = currentVideoData.duration;
+            document.getElementById('videoChannel').textContent = currentVideoData.channel;
+        }
+        
+        // Gerar opções de download
+        function generateDownloadOptions() {
+            const downloadOptions = document.getElementById('downloadOptions');
+            downloadOptions.innerHTML = '';
+            
+            // Simular diferentes formatos e qualidades disponíveis
+            const formats = [
+                { format: 'MP3', quality: 'Alta (320kbps)', size: '8-12 MB', icon: 'fa-file-audio', color: '#ff0040' },
+                { format: 'MP3', quality: 'Média (192kbps)', size: '5-8 MB', icon: 'fa-file-audio', color: '#ff0040' },
+                { format: 'MP3', quality: 'Baixa (128kbps)', size: '3-5 MB', icon: 'fa-file-audio', color: '#ff0040' },
+                { format: 'M4A', quality: 'Alta (256kbps)', size: '6-10 MB', icon: 'fa-file-audio', color: '#0066ff' },
+                { format: 'WAV', quality: 'Lossless', size: '40-60 MB', icon: 'fa-file-waveform', color: '#00cc66' },
+                { format: 'OGG', quality: 'Média (192kbps)', size: '4-7 MB', icon: 'fa-music', color: '#ff9900' }
+            ];
+            
+            formats.forEach((format, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'download-btn';
+                btn.innerHTML = `
+                    <div class="format-info">
+                        <i class="fas ${format.icon}" style="color: ${format.color};"></i>
+                        <div>
+                            <div>${format.format} - ${format.quality}</div>
+                            <div class="size">${format.size}</div>
+                        </div>
+                    </div>
+                    <div class="format-badge" style="background: ${format.color};">${format.format}</div>
+                `;
+                
+                btn.onclick = () => startDownload(format);
+                
+                downloadOptions.appendChild(btn);
+            });
+        }
+        
+        // Iniciar download
+        function startDownload(format) {
+            if (!currentVideoId) {
+                showError('Nenhum vídeo carregado para download');
+                return;
+            }
+            
+            // Mostrar barra de progresso
+            const downloadProgress = document.getElementById('downloadProgress');
+            const downloadProgressFill = document.getElementById('downloadProgressFill');
+            const downloadStatus = document.getElementById('downloadStatus');
+            const downloadPercentage = document.getElementById('downloadPercentage');
+            
+            downloadProgress.style.display = 'block';
+            downloadProgressFill.style.width = '0%';
+            downloadPercentage.textContent = '0%';
+            downloadStatus.textContent = `Preparando download de ${format.format} (${format.quality})...`;
+            
+            // Simular processo de download
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                downloadProgressFill.style.width = `${progress}%`;
+                downloadPercentage.textContent = `${Math.round(progress)}%`;
+                
+                if (progress < 30) {
+                    downloadStatus.textContent = 'Extraindo áudio do YouTube...';
+                } else if (progress < 70) {
+                    downloadStatus.textContent = 'Convertendo para ' + format.format + '...';
+                } else if (progress < 95) {
+                    downloadStatus.textContent = 'Preparando arquivo para download...';
+                } else {
+                    downloadStatus.textContent = 'Download pronto!';
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Simular download completo e iniciar download real
+                    setTimeout(() => {
+                        // Em produção, aqui você chamaria sua API de download
+                        // Por enquanto, vamos simular um download
+                        simulateFileDownload(format);
+                        
+                        // Resetar barra de progresso após 3 segundos
+                        setTimeout(() => {
+                            downloadProgress.style.display = 'none';
+                        }, 3000);
+                    }, 1000);
+                }
+            }, 200);
+        }
+        
+        // Simular download de arquivo
+        function simulateFileDownload(format) {
+            const videoTitle = currentVideoData?.title || `youtube_audio_${currentVideoId}`;
+            const safeTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const filename = `${safeTitle}.${format.format.toLowerCase()}`;
+            
+            alert(`Download de "${filename}" (${format.quality}) iniciado!\n\nEm breve virá...`);
+            
+            // const downloadUrl = `https://yt-audio-api.com/download/${currentVideoId}?format=${format.format}&quality=${format.quality}`;
+            // window.open(downloadUrl, '_blank');
+        }
+        
+        // Alternar play/pause
+        function togglePlayPause() {
+            if (!currentVideoId) {
+                showError('Nenhum vídeo carregado. Por favor, insira um link do YouTube primeiro.');
+                return;
+            }
+            
+            if (isPlaying) {
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
+        }
+        
+        // Atualizar botão de play/pause
+        function updatePlayPauseButton() {
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const icon = playPauseBtn.querySelector('i');
+            
+            if (isPlaying) {
+                icon.className = 'fas fa-pause';
+            } else {
+                icon.className = 'fas fa-play';
+            }
+        }
+        
+        // Atualizar barra de progresso
+        function updateProgress() {
+            if (!player || !player.getCurrentTime || !player.getDuration) return;
+            
+            const currentTime = player.getCurrentTime();
+            const duration = player.getDuration();
+            
+            if (duration > 0) {
+                const progressPercent = (currentTime / duration) * 100;
+                document.getElementById('progressSlider').value = progressPercent;
+                
+                // Atualizar tempo atual e duração
+                document.getElementById('currentTime').textContent = formatTime(currentTime);
+                document.getElementById('duration').textContent = formatTime(duration);
+            }
+        }
+        
+        // Iniciar atualização contínua do progresso
+        function startProgressUpdate() {
+            stopProgressUpdate(); // Limpar qualquer intervalo existente
+            updateInterval = setInterval(updateProgress, 500);
+        }
+        
+        // Parar atualização do progresso
+        function stopProgressUpdate() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+        
+        // Formatar tempo (segundos para MM:SS)
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Atualizar volume
+        function updateVolume() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumePercent = document.getElementById('volumePercent');
+            const volume = volumeSlider.value;
+            
+            player.setVolume(volume);
+            volumePercent.textContent = `${volume}%`;
+        }
+        
+        // Navegar pela música (quando o usuário arrasta a barra de progresso)
+        function seekTo() {
+            const progressSlider = document.getElementById('progressSlider');
+            const progressPercent = progressSlider.value;
+            
+            if (player && player.getDuration) {
+                const duration = player.getDuration();
+                const seekTime = duration * (progressPercent / 100);
+                player.seekTo(seekTime, true);
+            }
+        }
+        
+        // Mostrar/ocultar seção do player
+        function showPlayerSection(show) {
+            const playerSection = document.getElementById('playerSection');
+            playerSection.style.display = show ? 'block' : 'none';
+        }
+        
+        // Mostrar/ocultar loader
+        function showLoader(show) {
+            const loader = document.getElementById('loader');
+            loader.style.display = show ? 'block' : 'none';
+        }
+        
+        // Mostrar mensagem de erro
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            errorText.textContent = message;
+            errorMessage.style.display = 'flex';
+            
+            // Ocultar a mensagem após 5 segundos
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Event Listeners
+        document.getElementById('loadBtn').addEventListener('click', loadYouTubeVideo);
+        
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadYouTubeVideo();
+            }
+        });
+        
+        document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+        
+        document.getElementById('volumeSlider').addEventListener('input', updateVolume);
+        
+        document.getElementById('progressSlider').addEventListener('input', seekTo);
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (!currentVideoId) {
+                showError('Carregue um vídeo primeiro para ver as opções de download');
+                return;
+            }
+            
+            // scroll suave para a seção de dwnld
+            document.querySelector('.download-section').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        });
+        
+        // btns de controle adicionais
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                player.seekTo(Math.max(0, currentTime - 10), true);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (player && player.getCurrentTime && player.getDuration) {
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
+                player.seekTo(Math.min(duration, currentTime + 10), true);
+            }
+        });
+        
+        document.getElementById('urlInput').value = 'https://www.youtube.com/watch?v=WmiWBCnXEb8';
+    </script>
+</body>
+</html>
