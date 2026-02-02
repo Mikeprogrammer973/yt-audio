@@ -315,27 +315,32 @@
             return null;
         }
 
-        player = new YT.Player('yt-player', {
-            videoId: '',
-            playerVars: {
-                controls: 0,
-                modestbranding: 1,
-                rel: 0,
-                enablejsapi: 1
-            },
-            events: {
-                onReady: () => {
-                    player.setVolume(80);
-                    loadVideoFromHash();
+        try {
+            player = new YT.Player('yt-player', {
+                videoId: '',
+                playerVars: {
+                    controls: 0,
+                    modestbranding: 1,
+                    rel: 0,
+                    enablejsapi: 1
                 },
-                onStateChange: onPlayerStateChange,
-                onError: (event) => {
-                    showError('Erro no player: ' + event.data);
-                    hasError = true;
+                events: {
+                    onReady: () => {
+                        player.setVolume(80);
+                        loadVideoFromHash();
+                    },
+                    onStateChange: onPlayerStateChange,
+                    onError: (event) => {
+                        showError('Erro no player: ' + event.data);
+                        hasError = true;
+                    }
                 }
-            }
-        });
+            });
 
+        } catch (error) {
+            console.log(error)
+        }
+        
         function onPlayerStateChange(event) {
             switch(event.data) {
                 case YT.PlayerState.PLAYING:
