@@ -519,70 +519,7 @@
         });
 
         // Inicializar volume
-        updateVolume();
-
-        window.addEventListener('message', function(event) {
-          if (event.data.type === 'command') {
-            switch(event.data.command) {
-              case 'playPause':
-                togglePlayPause();
-                break;
-              case 'volume':
-                updateVolume();
-                break;
-              case 'toggleMute':
-                if (player) {
-                  if (player.isMuted()) {
-                    player.unMute();
-                  } else {
-                    player.mute();
-                  }
-                }
-                break;
-              case 'skipBack':
-                if (player && player.getCurrentTime) {
-                  const current = player.getCurrentTime();
-                  player.seekTo(Math.max(0, current - 10), true);
-                }
-                break;
-              case 'skipForward':
-                if (player && player.getCurrentTime && player.getDuration) {
-                  const current = player.getCurrentTime();
-                  const duration = player.getDuration();
-                  player.seekTo(Math.min(duration, current + 10), true);
-                }
-                break;
-            }
-          }
-        });
-
-        // Enviar estado periodicamente
-        setInterval(() => {
-          if (player && player.getPlayerState && player.getVolume) {
-            const state = player.getPlayerState();
-            const volume = player.getVolume();
-            const isPlaying = state === 1;
-            
-            window.parent.postMessage({
-              type: 'playerState',
-              isPlaying,
-              volume
-            }, '*');
-          }
-        }, 1000);
-        
-        // Enviar progresso
-        setInterval(() => {
-          if (player && player.getCurrentTime && player.getDuration) {
-            window.parent.postMessage({
-              type: 'progress',
-              currentTime: player.getCurrentTime(),
-              duration: player.getDuration()
-            }, '*');
-          }
-        }, 500);
-
-                
+        updateVolume();   
     </script>
 </body>
 </html>
